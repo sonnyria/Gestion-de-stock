@@ -1,0 +1,7 @@
+{
+  "name": "GestionStock AI",
+  "description": "Application de gestion de stock intelligente utilisant la caméra pour scanner les codes-barres et Gemini pour l'identification.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

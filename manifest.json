@@ -1,0 +1,21 @@
+{
+  "short_name": "StockAI",
+  "name": "GestionStock AI",
+  "icons": [
+    {
+      "src": "https://img.icons8.com/fluency/192/open-box.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://img.icons8.com/fluency/512/open-box.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#111827",
+  "background_color": "#111827",
+  "orientation": "portrait"
+}

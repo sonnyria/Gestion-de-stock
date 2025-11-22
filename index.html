@@ -17,70 +17,53 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Babel Standalone pour compiler le TSX à la volée -->
+    <!-- Babel pour compiler le TSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
-      /* Custom scrollbar for cleaner UI */
-      ::-webkit-scrollbar {
-        width: 6px;
-      }
-      ::-webkit-scrollbar-track {
-        background: #1f2937;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #4b5563;
-        border-radius: 3px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #6b7280;
-      }
+      ::-webkit-scrollbar { width: 6px; }
+      ::-webkit-scrollbar-track { background: #1f2937; }
+      ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
       body {
-        background-color: #111827; /* gray-900 */
-        color: #f3f4f6; /* gray-100 */
-        overscroll-behavior-y: none; /* Empêche le rebond élastique sur iOS */
-        
-        /* Comportement natif iOS */
+        background-color: #111827;
+        color: #f3f4f6;
+        overscroll-behavior-y: none;
         -webkit-tap-highlight-color: transparent;
-        -webkit-touch-callout: none;
-        user-select: none; /* Désactive la sélection de texte comme une app native */
+        user-select: none;
         -webkit-user-select: none;
       }
-      
-      /* Réactiver la sélection pour les champs de saisie */
       input, textarea, [contenteditable] {
         user-select: text;
         -webkit-user-select: text;
       }
-
-      /* Gestion des Safe Areas (Encoche iPhone) */
-      .pt-safe {
-        padding-top: env(safe-area-inset-top);
-      }
-      .pb-safe {
-        padding-bottom: env(safe-area-inset-bottom);
-      }
-      .mt-safe {
-        margin-top: env(safe-area-inset-top);
-      }
+      .pt-safe { padding-top: env(safe-area-inset-top); }
+      .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+      
+      @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+      .animate-fade-in { animation: fade-in 0.3s ease-out; }
     </style>
-  <script type="importmap">
+
+    <!-- Polyfill pour 'process' requis par certaines libs -->
+    <script>
+      window.process = { env: { NODE_ENV: 'production' } };
+    </script>
+
+    <script type="importmap">
 {
   "imports": {
-    "react-dom/client": "https://aistudiocdn.com/react-dom@^19.2.0/client",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
+    "react": "https://esm.sh/react@18.2.0",
+    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+    "@google/genai": "https://esm.sh/@google/genai@0.1.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react": "https://aistudiocdn.com/react@^19.2.0",
-    "recharts": "https://aistudiocdn.com/recharts@^3.4.1",
     "react-webcam": "https://aistudiocdn.com/react-webcam@^7.2.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/"
+    "recharts": "https://aistudiocdn.com/recharts@^3.4.1"
   }
 }
 </script>
 </head>
   <body>
     <div id="root"></div>
-    <!-- Utilisation de type="text/babel" et data-type="module" pour le support TSX -->
     <script type="text/babel" data-type="module" src="./index.tsx"></script>
   </body>
 </html>

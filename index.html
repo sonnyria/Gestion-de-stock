@@ -17,70 +17,91 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Babel Standalone pour compiler le TSX à la volée -->
+    <!-- Babel Standalone -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
-      /* Custom scrollbar for cleaner UI */
-      ::-webkit-scrollbar {
-        width: 6px;
-      }
-      ::-webkit-scrollbar-track {
-        background: #1f2937;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #4b5563;
-        border-radius: 3px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #6b7280;
-      }
+      ::-webkit-scrollbar { width: 6px; }
+      ::-webkit-scrollbar-track { background: #1f2937; }
+      ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
       body {
-        background-color: #111827; /* gray-900 */
-        color: #f3f4f6; /* gray-100 */
-        overscroll-behavior-y: none; /* Empêche le rebond élastique sur iOS */
-        
-        /* Comportement natif iOS */
+        background-color: #111827;
+        color: #f3f4f6;
+        overscroll-behavior-y: none;
         -webkit-tap-highlight-color: transparent;
         -webkit-touch-callout: none;
-        user-select: none; /* Désactive la sélection de texte comme une app native */
+        user-select: none;
         -webkit-user-select: none;
       }
+      input, textarea, [contenteditable] { user-select: text; -webkit-user-select: text; }
+      .pt-safe { padding-top: env(safe-area-inset-top); }
+      .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
       
-      /* Réactiver la sélection pour les champs de saisie */
-      input, textarea, [contenteditable] {
-        user-select: text;
-        -webkit-user-select: text;
-      }
-
-      /* Gestion des Safe Areas (Encoche iPhone) */
-      .pt-safe {
-        padding-top: env(safe-area-inset-top);
-      }
-      .pb-safe {
-        padding-bottom: env(safe-area-inset-bottom);
-      }
-      .mt-safe {
-        margin-top: env(safe-area-inset-top);
-      }
+      /* Animation utilitaire */
+      @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+      .animate-fade-in { animation: fade-in 0.3s ease-out; }
     </style>
-  <script type="importmap">
+
+    <!-- Polyfill pour process.env (évite le crash "process is not defined") -->
+    <script>
+      window.process = { env: { NODE_ENV: 'production' } };
+    </script>
+
+    <!-- Import Map via ESM.SH (CDN très stable pour React) -->
+    <script type="importmap">
 {
   "imports": {
-    "react-dom/client": "https://aistudiocdn.com/react-dom@^19.2.0/client",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
+    "react": "https://esm.sh/react@18.2.0",
+    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+    "@google/genai": "https://esm.sh/@google/genai@0.1.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react": "https://aistudiocdn.com/react@^19.2.0",
-    "recharts": "https://aistudiocdn.com/recharts@^3.4.1",
     "react-webcam": "https://aistudiocdn.com/react-webcam@^7.2.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/"
+    "recharts": "https://aistudiocdn.com/recharts@^3.4.1"
   }
 }
 </script>
-</head>
+  </head>
   <body>
     <div id="root"></div>
-    <!-- Utilisation de type="text/babel" et data-type="module" pour le support TSX -->
+    
+    <!-- Gestionnaire d'erreurs global : Affiche l'erreur à l'écran au lieu d'une page bleue vide -->
+    <script>
+      window.onerror = function(message, source, lineno, colno, error) {
+        const root = document.getElementById('root');
+        // Si le root est vide, c'est que React n'a pas démarré
+        if(root && root.innerHTML.trim() === "") {
+            document.body.innerHTML = `
+                <div style="padding: 20px; background: #1a1a1a; color: #ff5555; font-family: monospace; height: 100vh; box-sizing: border-box;">
+                    <h2 style="margin-top:0">Erreur Critique au Démarrage</h2>
+                    <p>L'application n'a pas pu charger les scripts.</p>
+                    <div style="background: #000; padding: 15px; border-radius: 8px; border: 1px solid #333; overflow: auto;">
+                        <strong>Message:</strong> ${message}<br/>
+                        <strong>Ligne:</strong> ${lineno}<br/>
+                        <strong>Source:</strong> ${source}
+                    </div>
+                    <p style="color: #888; font-size: 12px; margin-top: 20px;">
+                        Si vous êtes sur Vercel/GitHub Pages, assurez-vous que index.tsx contient tout le code.
+                    </p>
+                    <button onclick="location.reload()" style="background: #333; color: white; border: none; padding: 10px 20px; margin-top: 10px; border-radius: 4px; cursor: pointer;">Rafraîchir</button>
+                </div>
+            `;
+        }
+      };
+    </script>
+
+    <!-- CHARGEMENT DU FICHIER UNIQUE -->
     <script type="text/babel" data-type="module" src="./index.tsx"></script>
+
+    <!-- Service Worker -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('SW registered'))
+            .catch(err => console.log('SW failed', err));
+        });
+      }
+    </script>
   </body>
 </html>

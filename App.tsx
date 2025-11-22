@@ -296,9 +296,22 @@ const App: React.FC = () => {
                 placeholder="Collez votre clé AI Studio ici"
                 className="w-full bg-gray-900 border border-gray-600 rounded-lg p-3 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none"
               />
-              <p className="text-[10px] text-gray-500 mt-1">
-                Nécessaire pour le scan et l'IA. Stockée uniquement sur votre appareil.
-              </p>
+              <div className="flex justify-between items-center mt-2">
+                  <p className="text-[10px] text-gray-500">
+                    Stockée localement sur l'appareil.
+                  </p>
+                  <a 
+                    href="https://aistudio.google.com/app/apikey" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-xs text-blue-400 hover:text-blue-300 underline flex items-center gap-1"
+                  >
+                    Obtenir une clé
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+              </div>
             </div>
 
             <hr className="border-gray-700 mb-6" />

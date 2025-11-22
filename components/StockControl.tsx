@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Product } from '../types';
+import { Product } from '../types.ts';
 
 interface StockControlProps {
   product: Product;

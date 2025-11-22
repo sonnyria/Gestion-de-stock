@@ -16,6 +16,10 @@
     <link rel="apple-touch-icon" href="https://img.icons8.com/fluency/192/open-box.png" />
 
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Babel Standalone pour compiler le TSX à la volée -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
     <style>
       /* Custom scrollbar for cleaner UI */
       ::-webkit-scrollbar {
@@ -63,18 +67,20 @@
   <script type="importmap">
 {
   "imports": {
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react-dom/client": "https://aistudiocdn.com/react-dom@^19.2.0/client",
     "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "react": "https://aistudiocdn.com/react@^19.2.0",
     "recharts": "https://aistudiocdn.com/recharts@^3.4.1",
-    "react-webcam": "https://aistudiocdn.com/react-webcam@^7.2.0"
+    "react-webcam": "https://aistudiocdn.com/react-webcam@^7.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/"
   }
 }
 </script>
 </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="./index.tsx"></script>
+    <!-- Utilisation de type="text/babel" et data-type="module" pour le support TSX -->
+    <script type="text/babel" data-type="module" src="./index.tsx"></script>
   </body>
 </html>

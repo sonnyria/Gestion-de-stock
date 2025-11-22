@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Product, ViewState } from './types';
-import Scanner from './components/Scanner';
-import ProductForm from './components/ProductForm';
-import StockControl from './components/StockControl';
+import { Product, ViewState } from './types.ts';
+import Scanner from './components/Scanner.tsx';
+import ProductForm from './components/ProductForm.tsx';
+import StockControl from './components/StockControl.tsx';
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 const App: React.FC = () => {

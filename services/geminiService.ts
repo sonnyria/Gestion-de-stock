@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import { ProductEnhancement } from '../types';
+import { ProductEnhancement } from '../types.ts';
 
 // Helper to get the client with the user's key
 const getAIClient = (): GoogleGenAI => {

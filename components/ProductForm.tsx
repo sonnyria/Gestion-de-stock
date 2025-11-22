@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Product, ProductEnhancement } from '../types';
-import { enhanceProductInfo } from '../services/geminiService';
+import { Product, ProductEnhancement } from '../types.ts';
+import { enhanceProductInfo } from '../services/geminiService.ts';
 
 interface ProductFormProps {
   barcode: string;

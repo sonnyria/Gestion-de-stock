@@ -1,6 +1,6 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import Webcam from 'react-webcam';
-import { readBarcodeWithGemini } from '../services/geminiService';
+import { readBarcodeWithGemini } from '../services/geminiService.ts';
 
 interface ScannerProps {
   onScan: (barcode: string) => void;

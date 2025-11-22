@@ -1,11 +1,15 @@
-const CACHE_NAME = 'stock-ai-v2';
+const CACHE_NAME = 'stock-ai-v3';
 const urlsToCache = [
   './',
   './index.html',
   './index.tsx',
   './App.tsx',
   './types.ts',
-  './manifest.json'
+  './manifest.json',
+  './services/geminiService.ts',
+  './components/Scanner.tsx',
+  './components/ProductForm.tsx',
+  './components/StockControl.tsx'
 ];
 
 // Domaines externes à mettre en cache (CDNs utilisés dans index.html)
@@ -14,7 +18,8 @@ const CDNs = [
   'aistudiocdn.com',
   'img.icons8.com',
   'fonts.googleapis.com',
-  'fonts.gstatic.com'
+  'fonts.gstatic.com',
+  'unpkg.com' // Pour Babel Standalone
 ];
 
 self.addEventListener('install', (event) => {
@@ -53,8 +58,7 @@ self.addEventListener('fetch', (event) => {
           }
           return networkResponse;
         }).catch((err) => {
-           // En cas d'erreur réseau (hors ligne), on ne fait rien, le cache a déjà été servi ou le sera
-           // console.log('Network fetch failed, using cache');
+           // En cas d'erreur réseau (hors ligne), on ne fait rien
         });
 
         return cachedResponse || fetchPromise;

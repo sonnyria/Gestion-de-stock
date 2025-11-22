@@ -1,34 +1,20 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+
+import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom/client';
 import { GoogleGenAI, Type } from "@google/genai";
 
-// --- 1. TYPES & DATA ---
+// --- 1. CONSTANTS & DATA HELPERS ---
 
-interface Product {
-  barcode: string;
-  name: string;
-  quantity: number;
-  category?: string;
-  emoji?: string;
-  lastUpdated: number;
-}
-
-enum ViewState {
-  DASHBOARD = 'DASHBOARD',
-  SCANNER = 'SCANNER',
-  ADD_PRODUCT = 'ADD_PRODUCT',
-  PRODUCT_DETAILS = 'PRODUCT_DETAILS'
-}
-
-interface ProductEnhancement {
-  category: string;
-  emoji: string;
-  suggestedName?: string;
-}
+const ViewState = {
+  DASHBOARD: 'DASHBOARD',
+  SCANNER: 'SCANNER',
+  ADD_PRODUCT: 'ADD_PRODUCT',
+  PRODUCT_DETAILS: 'PRODUCT_DETAILS'
+};
 
 // --- 2. SERVICES (GEMINI) ---
 
-const getAIClient = (): GoogleGenAI => {
+const getAIClient = () => {
   const apiKey = localStorage.getItem('gemini_api_key');
   if (!apiKey) {
     throw new Error("Clé API manquante.");
@@ -36,7 +22,7 @@ const getAIClient = (): GoogleGenAI => {
   return new GoogleGenAI({ apiKey });
 };
 
-const readBarcodeWithGemini = async (base64Image: string): Promise<string | null> => {
+const readBarcodeWithGemini = async (base64Image) => {
   try {
     const ai = getAIClient();
     // Nettoyage base64
@@ -59,13 +45,14 @@ const readBarcodeWithGemini = async (base64Image: string): Promise<string | null
     // Regex pour trouver une suite de chiffres (EAN/UPC)
     const match = text.replace(/\s/g, '').match(/[0-9]{8,14}/);
     return match ? match[0] : null;
-  } catch (error: any) {
+  } catch (error) {
+    // Note: Suppression du typage ': any' ici qui causait l'erreur
     if (error.message?.includes("API")) throw error;
     return null;
   }
 };
 
-const enhanceProductInfo = async (productName: string): Promise<ProductEnhancement> => {
+const enhanceProductInfo = async (productName) => {
   try {
     const ai = getAIClient();
     const response = await ai.models.generateContent({
@@ -85,7 +72,7 @@ const enhanceProductInfo = async (productName: string): Promise<ProductEnhanceme
       }
     });
     if (response.text) {
-        return JSON.parse(response.text) as ProductEnhancement;
+        return JSON.parse(response.text);
     }
     throw new Error("Empty response");
   } catch (e) {
@@ -93,16 +80,16 @@ const enhanceProductInfo = async (productName: string): Promise<ProductEnhanceme
   }
 };
 
-// --- 3. COMPONENTS (INTÉGRÉS DIRECTEMENT) ---
+// --- 3. COMPONENTS ---
 
-// 3.1 NATIVE SCANNER (Remplaçant react-webcam pour éviter les erreurs de build)
-const Scanner: React.FC<{ onScan: (code: string) => void; onCancel: () => void }> = ({ onScan, onCancel }) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(document.createElement('canvas'));
+// 3.1 NATIVE SCANNER
+const Scanner = ({ onScan, onCancel }) => {
+  const videoRef = useRef(null);
+  const canvasRef = useRef(document.createElement('canvas'));
   const [scanning, setScanning] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
-  const [selectedDeviceId, setSelectedDeviceId] = useState<string>(() => localStorage.getItem('scanner_device_id') || "");
+  const [error, setError] = useState(null);
+  const [devices, setDevices] = useState([]);
+  const [selectedDeviceId, setSelectedDeviceId] = useState(() => localStorage.getItem('scanner_device_id') || "");
 
   useEffect(() => {
     navigator.mediaDevices.enumerateDevices()
@@ -111,11 +98,12 @@ const Scanner: React.FC<{ onScan: (code: string) => void; onCancel: () => void }
   }, []);
 
   useEffect(() => {
-    let stream: MediaStream | null = null;
+    let stream = null;
 
     const startCamera = async () => {
       try {
-        const constraints: MediaStreamConstraints = {
+        // Constraints standard JS
+        const constraints = {
           video: {
             deviceId: selectedDeviceId ? { exact: selectedDeviceId } : undefined,
             facingMode: selectedDeviceId ? undefined : "environment",
@@ -128,7 +116,7 @@ const Scanner: React.FC<{ onScan: (code: string) => void; onCancel: () => void }
         
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          videoRef.current.setAttribute("playsinline", "true"); // Important pour iOS
+          videoRef.current.setAttribute("playsinline", "true");
           await videoRef.current.play();
         }
         setError(null);
@@ -159,32 +147,28 @@ const Scanner: React.FC<{ onScan: (code: string) => void; onCancel: () => void }
       if (!ctx) return;
 
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      
-      // Conversion en base64 légère (qualité 0.7)
       const imageSrc = canvas.toDataURL('image/jpeg', 0.7);
 
       setScanning(true);
       try {
         const code = await readBarcodeWithGemini(imageSrc);
         if (code) {
-          // Petit son de succès
           const audio = new Audio('https://actions.google.com/sounds/v1/cartoon/pop.ogg');
           audio.play().catch(() => {});
           onScan(code);
         }
       } catch (e) {
-        // Silencieux, on réessaie
+        // Silencieux
       } finally {
         setScanning(false);
       }
-    }, 2000); // Scan toutes les 2 secondes pour ne pas surcharger l'API
+    }, 2000);
 
     return () => clearInterval(interval);
   }, [scanning, onScan]);
 
   return (
     <div className="fixed inset-0 z-50 bg-black flex flex-col">
-      {/* Sélecteur de caméra */}
       <div className="absolute top-0 left-0 right-0 z-30 p-4 pt-safe mt-2 flex justify-center">
         <select 
           className="bg-black/60 text-white border border-gray-500 rounded-full px-4 py-2 text-sm backdrop-blur-md appearance-none text-center"
@@ -199,7 +183,6 @@ const Scanner: React.FC<{ onScan: (code: string) => void; onCancel: () => void }
         </select>
       </div>
 
-      {/* Flux Vidéo */}
       <div className="relative flex-1 bg-black overflow-hidden flex items-center justify-center">
         <video 
           ref={videoRef} 
@@ -207,18 +190,13 @@ const Scanner: React.FC<{ onScan: (code: string) => void; onCancel: () => void }
           muted 
           playsInline 
         />
-        
-        {/* Viseur */}
         <div className="absolute inset-0 border-[40px] border-black/50 flex items-center justify-center pointer-events-none">
           <div className={`w-72 h-48 border-2 rounded-lg relative transition-colors duration-300 shadow-[0_0_50px_rgba(0,0,0,0.5)] ${scanning ? 'border-blue-500 bg-blue-500/10' : 'border-white/50'}`}>
              <div className="absolute top-0 left-0 w-6 h-6 border-t-4 border-l-4 -mt-1 -ml-1 border-white"></div>
              <div className="absolute top-0 right-0 w-6 h-6 border-t-4 border-r-4 -mt-1 -mr-1 border-white"></div>
              <div className="absolute bottom-0 left-0 w-6 h-6 border-b-4 border-l-4 -mb-1 -ml-1 border-white"></div>
              <div className="absolute bottom-0 right-0 w-6 h-6 border-b-4 border-r-4 -mb-1 -mr-1 border-white"></div>
-             
-             {/* Barre de scan animée */}
              <div className="absolute top-0 left-0 right-0 h-0.5 bg-blue-400 animate-[scan_2s_ease-in-out_infinite] opacity-50"></div>
-
              {scanning && (
                <div className="absolute inset-0 flex items-center justify-center">
                  <span className="text-blue-300 text-xs font-bold bg-black/60 px-2 py-1 rounded animate-pulse">ANALYSE IA...</span>
@@ -226,7 +204,6 @@ const Scanner: React.FC<{ onScan: (code: string) => void; onCancel: () => void }
              )}
           </div>
         </div>
-
         {error && (
           <div className="absolute top-1/2 left-4 right-4 text-center p-4 bg-red-600/90 text-white rounded-xl transform -translate-y-1/2">
             <p className="font-bold mb-2">Erreur Caméra</p>
@@ -240,15 +217,13 @@ const Scanner: React.FC<{ onScan: (code: string) => void; onCancel: () => void }
           Annuler
         </button>
       </div>
-      <style>{`
-        @keyframes scan { 0%,100% { top: 0; opacity: 0; } 50% { top: 100%; opacity: 1; } }
-      `}</style>
+      <style>{`@keyframes scan { 0%,100% { top: 0; opacity: 0; } 50% { top: 100%; opacity: 1; } }`}</style>
     </div>
   );
 };
 
 // 3.2 PRODUCT FORM
-const ProductForm: React.FC<{ barcode: string; onSave: (p: Product) => void; onCancel: () => void }> = ({ barcode, onSave, onCancel }) => {
+const ProductForm = ({ barcode, onSave, onCancel }) => {
   const [name, setName] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [emoji, setEmoji] = useState('📦');
@@ -325,7 +300,7 @@ const ProductForm: React.FC<{ barcode: string; onSave: (p: Product) => void; onC
 };
 
 // 3.3 STOCK CONTROL
-const StockControl: React.FC<{ product: Product; onUpdate: (d: number) => void; onDelete: () => void; onClose: () => void }> = ({ product, onUpdate, onDelete, onClose }) => {
+const StockControl = ({ product, onUpdate, onDelete, onClose }) => {
   const [confirmDelete, setConfirmDelete] = useState(false);
   return (
     <div className="flex flex-col h-full bg-gray-900 text-white p-6 animate-fade-in">
@@ -373,8 +348,8 @@ const StockControl: React.FC<{ product: Product; onUpdate: (d: number) => void; 
   );
 };
 
-// 3.4 SIMPLE CSS CHART (Remplace Recharts pour éviter les bugs)
-const SimpleBarChart: React.FC<{ data: {name: string, value: number}[] }> = ({ data }) => {
+// 3.4 SIMPLE CSS CHART
+const SimpleBarChart = ({ data }) => {
   const max = Math.max(...data.map(d => d.value), 1);
   return (
     <div className="h-40 flex items-end gap-2 pt-6 pb-2 px-2">
@@ -397,15 +372,14 @@ const SimpleBarChart: React.FC<{ data: {name: string, value: number}[] }> = ({ d
 
 // --- 4. MAIN APP ---
 
-const App: React.FC = () => {
-  const [inventory, setInventory] = useState<Product[]>([]);
-  const [view, setView] = useState<ViewState>(ViewState.DASHBOARD);
-  const [activeId, setActiveId] = useState<string | null>(null);
+const App = () => {
+  const [inventory, setInventory] = useState([]);
+  const [view, setView] = useState(ViewState.DASHBOARD);
+  const [activeId, setActiveId] = useState(null);
   const [apiKey, setApiKey] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [manualInput, setManualInput] = useState('');
 
-  // Initialisation unique
   useEffect(() => {
     try {
       const savedInv = localStorage.getItem('stock_inventory');
@@ -415,18 +389,17 @@ const App: React.FC = () => {
     } catch(e) { console.error(e); }
   }, []);
 
-  // Sauvegarde automatique
   useEffect(() => {
     localStorage.setItem('stock_inventory', JSON.stringify(inventory));
   }, [inventory]);
 
-  const handleScan = (code: string) => {
+  const handleScan = (code) => {
     setActiveId(code);
     const exists = inventory.find(p => p.barcode === code);
     setView(exists ? ViewState.PRODUCT_DETAILS : ViewState.ADD_PRODUCT);
   };
 
-  const updateStock = (delta: number) => {
+  const updateStock = (delta) => {
     if(!activeId) return;
     setInventory(prev => prev.map(p => p.barcode === activeId ? {...p, quantity: Math.max(0, p.quantity + delta), lastUpdated: Date.now()} : p));
   };
@@ -437,13 +410,12 @@ const App: React.FC = () => {
     setView(ViewState.DASHBOARD);
   };
 
-  // Routing visuel
+  // Routing
   if (view === ViewState.SCANNER) return <Scanner onScan={handleScan} onCancel={() => setView(ViewState.DASHBOARD)} />;
   if (view === ViewState.ADD_PRODUCT && activeId) return <div className="pt-safe h-full"><ProductForm barcode={activeId} onSave={p => { setInventory(prev => [...prev, p]); setView(ViewState.DASHBOARD); }} onCancel={() => setView(ViewState.DASHBOARD)} /></div>;
   if (view === ViewState.PRODUCT_DETAILS && activeId) {
     const prod = inventory.find(p => p.barcode === activeId);
     if(prod) return <div className="pt-safe h-full"><StockControl product={prod} onUpdate={updateStock} onDelete={deleteProduct} onClose={() => setView(ViewState.DASHBOARD)} /></div>;
-    // Fallback si produit non trouvé
     setView(ViewState.DASHBOARD);
   }
 
@@ -461,10 +433,9 @@ const App: React.FC = () => {
         <div className="w-10"></div>
       </header>
 
-      {/* Dashboard Content */}
+      {/* Dashboard */}
       <div className="flex-1 overflow-y-auto p-4 pb-24">
         
-        {/* KPI Cards */}
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow-lg">
             <p className="text-xs text-gray-400 uppercase font-bold tracking-wider">Total Unités</p>
@@ -476,7 +447,6 @@ const App: React.FC = () => {
           </div>
         </div>
 
-        {/* Chart */}
         {inventory.length > 0 && (
           <div className="mb-8 bg-gray-800/50 rounded-2xl p-4 border border-gray-700/50">
              <p className="text-xs text-gray-500 mb-2 uppercase tracking-widest">Top 5 Stocks</p>
@@ -484,7 +454,6 @@ const App: React.FC = () => {
           </div>
         )}
 
-        {/* Liste des produits */}
         <div className="space-y-3">
           {inventory.sort((a,b) => b.lastUpdated - a.lastUpdated).map(p => (
             <div key={p.barcode} className="bg-gray-800 p-3 pr-4 rounded-xl flex items-center justify-between border border-gray-700 shadow-md active:scale-[0.99] transition-transform">
@@ -501,7 +470,7 @@ const App: React.FC = () => {
 
               <div className="flex items-center gap-3 border-l border-gray-700 pl-3 ml-2">
                 <button 
-                    onClick={(e) => { e.stopPropagation(); updateStock(-1); setActiveId(p.barcode); }} // Hack rapide: set activeId to act on correct item if multiple clicks
+                    onClick={(e) => { e.stopPropagation(); updateStock(-1); setActiveId(p.barcode); }} 
                     className="w-8 h-8 flex items-center justify-center bg-gray-700 hover:bg-red-900/50 text-gray-300 hover:text-red-400 rounded"
                 >
                     -
@@ -527,7 +496,7 @@ const App: React.FC = () => {
         </div>
       </div>
 
-      {/* Barre d'actions flottante */}
+      {/* Action Bar */}
       <div className="fixed bottom-0 left-0 right-0 p-4 pb-6 bg-gradient-to-t from-gray-900 via-gray-900 to-transparent z-20">
         <div className="flex gap-3 max-w-md mx-auto">
           <form onSubmit={e => { e.preventDefault(); if(manualInput) handleScan(manualInput); setManualInput(''); }} className="flex-1">
@@ -543,12 +512,12 @@ const App: React.FC = () => {
             onClick={() => apiKey ? setView(ViewState.SCANNER) : setSettingsOpen(true)}
             className="w-14 h-14 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-600/40 active:scale-90 transition-transform"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1-1h-2a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" /></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1-1h-2a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1-1h-2a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" /></svg>
           </button>
         </div>
       </div>
 
-      {/* Modal Paramètres */}
+      {/* Paramètres Modal */}
       {settingsOpen && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-6 animate-fade-in">
           <div className="bg-gray-800 p-6 rounded-2xl w-full max-w-sm shadow-2xl border border-gray-700">
@@ -580,5 +549,5 @@ const App: React.FC = () => {
   );
 };
 
-const root = ReactDOM.createRoot(document.getElementById('root')!);
+const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(<React.StrictMode><App /></React.StrictMode>);

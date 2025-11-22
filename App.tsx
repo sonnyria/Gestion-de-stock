@@ -21,7 +21,10 @@ const App: React.FC = () => {
   // Import State
   const [pendingImport, setPendingImport] = useState<{ inventory: Product[], settings?: { threshold: number } } | null>(null);
 
-  // --- Persistence ---
+  // iOS Install Prompt State
+  const [showIosInstallPrompt, setShowIosInstallPrompt] = useState(false);
+
+  // --- Persistence & Checks ---
   useEffect(() => {
     const savedInventory = localStorage.getItem('stock_inventory');
     if (savedInventory) {
@@ -47,6 +50,16 @@ const App: React.FC = () => {
     const savedApiKey = localStorage.getItem('gemini_api_key');
     if (savedApiKey) {
       setApiKey(savedApiKey);
+    }
+
+    // Check if device is iOS and running in browser (not standalone)
+    const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+    
+    if (isIos && !isStandalone) {
+        // Show prompt after a short delay
+        const timer = setTimeout(() => setShowIosInstallPrompt(true), 2000);
+        return () => clearTimeout(timer);
     }
   }, []);
 
@@ -198,11 +211,13 @@ const App: React.FC = () => {
 
   if (view === ViewState.ADD_PRODUCT && activeBarcode) {
     return (
-      <ProductForm
-        barcode={activeBarcode}
-        onSave={handleAddProduct}
-        onCancel={() => setView(ViewState.DASHBOARD)}
-      />
+      <div className="pt-safe h-full bg-gray-900">
+        <ProductForm
+            barcode={activeBarcode}
+            onSave={handleAddProduct}
+            onCancel={() => setView(ViewState.DASHBOARD)}
+        />
+      </div>
     );
   }
 
@@ -210,12 +225,14 @@ const App: React.FC = () => {
     const product = inventory.find(p => p.barcode === activeBarcode);
     if (product) {
       return (
-        <StockControl
-          product={product}
-          onUpdateStock={handleUpdateStock}
-          onDelete={handleDeleteProduct}
-          onClose={() => setView(ViewState.DASHBOARD)}
-        />
+        <div className="pt-safe h-full bg-gray-900">
+            <StockControl
+            product={product}
+            onUpdateStock={handleUpdateStock}
+            onDelete={handleDeleteProduct}
+            onClose={() => setView(ViewState.DASHBOARD)}
+            />
+        </div>
       );
     }
      setView(ViewState.DASHBOARD);
@@ -223,8 +240,43 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100 flex flex-col relative">
+    <div className="min-h-screen bg-gray-900 text-gray-100 flex flex-col relative pt-safe">
       
+      {/* iOS Install Prompt Banner */}
+      {showIosInstallPrompt && (
+        <div className="fixed top-0 left-0 right-0 z-[100] pt-safe animate-fade-in pointer-events-none">
+           <div className="p-4 pointer-events-auto">
+                <div className="bg-blue-600/95 text-white p-4 rounded-xl shadow-2xl border border-blue-400 relative backdrop-blur-sm">
+                    <button 
+                        onClick={() => setShowIosInstallPrompt(false)}
+                        className="absolute top-2 right-2 text-blue-200 hover:text-white"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                    </button>
+                    <div className="flex items-start gap-3">
+                        <div className="bg-white/20 p-2 rounded-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 className="font-bold text-sm">Installer l'application</h4>
+                            <p className="text-xs text-blue-100 mt-1 leading-relaxed">
+                            Pour une meilleure expérience :<br/>
+                            1. Appuyez sur le bouton <strong>Partager</strong> <span className="inline-block align-middle"><svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg></span><br/>
+                            2. Sélectionnez <strong>"Sur l'écran d'accueil"</strong>
+                            </p>
+                        </div>
+                    </div>
+                    {/* Little arrow pointing down to help user find the share button */}
+                    <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 rotate-45 w-4 h-4 bg-blue-600"></div>
+                </div>
+           </div>
+        </div>
+      )}
+
       {/* Restore Confirmation Modal */}
       {pendingImport && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 p-4 backdrop-blur-md animate-fade-in">
@@ -276,7 +328,7 @@ const App: React.FC = () => {
 
       {/* Settings Modal */}
       {showSettings && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm animate-fade-in pt-safe pb-safe">
           <div className="bg-gray-800 rounded-2xl p-6 w-full max-w-sm border border-gray-700 shadow-2xl max-h-[90vh] overflow-y-auto">
             <h3 className="text-xl font-bold mb-6 text-white flex items-center gap-2 border-b border-gray-700 pb-3">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -530,7 +582,7 @@ const App: React.FC = () => {
       </div>
 
       {/* Bottom Actions */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-gray-900 via-gray-900 to-transparent z-10">
+      <div className="fixed bottom-0 left-0 right-0 p-4 pb-safe bg-gradient-to-t from-gray-900 via-gray-900 to-transparent z-10">
         <div className="flex gap-3 max-w-md mx-auto">
           {/* Manual Entry Input */}
           <form onSubmit={handleManualSubmit} className="flex-1">

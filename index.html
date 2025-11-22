@@ -2,7 +2,7 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>GestionStock AI</title>
     
     <!-- PWA Configuration -->
@@ -35,6 +35,29 @@
         background-color: #111827; /* gray-900 */
         color: #f3f4f6; /* gray-100 */
         overscroll-behavior-y: none; /* Empêche le rebond élastique sur iOS */
+        
+        /* Comportement natif iOS */
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+        user-select: none; /* Désactive la sélection de texte comme une app native */
+        -webkit-user-select: none;
+      }
+      
+      /* Réactiver la sélection pour les champs de saisie */
+      input, textarea, [contenteditable] {
+        user-select: text;
+        -webkit-user-select: text;
+      }
+
+      /* Gestion des Safe Areas (Encoche iPhone) */
+      .pt-safe {
+        padding-top: env(safe-area-inset-top);
+      }
+      .pb-safe {
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+      .mt-safe {
+        margin-top: env(safe-area-inset-top);
       }
     </style>
   <script type="importmap">

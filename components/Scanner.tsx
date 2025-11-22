@@ -150,8 +150,8 @@ const Scanner: React.FC<ScannerProps> = ({ onScan, onCancel }) => {
     <div className="fixed inset-0 z-50 bg-black flex flex-col">
       <div className="relative flex-1 overflow-hidden bg-black">
         
-        {/* Top Controls */}
-        <div className="absolute top-4 left-0 right-0 z-30 flex justify-between items-start px-4">
+        {/* Top Controls - Added pt-safe and mt-safe for notch handling */}
+        <div className="absolute top-0 left-0 right-0 z-30 flex justify-between items-start px-4 pt-safe mt-4">
             {/* Camera Selector */}
             <div className="flex-1 flex justify-center mr-10"> {/* mr-10 reserves space for the torch button */}
                 <select

@@ -13,8 +13,7 @@
       "sizes": "512x512"
     }
   ],
-  "start_url": "/Gestion-de-stock/",
-  "scope": "/Gestion-de-stock/",
+  "start_url": "/Gestion-de-stock/index.html",  "scope": "/Gestion-de-stock/",
   "display": "standalone",
   "theme_color": "#111827",
   "background_color": "#111827",

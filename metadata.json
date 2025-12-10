@@ -1,0 +1,5 @@
+{
+  "name": "Gestion Stock Sheets",
+  "description": "Interface de gestion d'inventaire connectée à Google Sheets via Apps Script.",
+  "requestFramePermissions": []
+}

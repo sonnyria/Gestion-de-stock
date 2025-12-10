@@ -1,15 +1,16 @@
 // COPIEZ CE CODE DANS L'ÉDITEUR DE SCRIPT DE VOTRE GOOGLE SHEET
 // (Extensions > Apps Script)
-//
+//le tableur doit avoir ces collones :
+//"Référence"	"Nom de l'article"	"Conditionnement"	"Péremption"	"Stock"	"Seuil"	"+Entrée/-Sortie"	"État"	"Fournisseur"
 // ÉTAPE TRES IMPORTANTE POUR LA MISE A JOUR :
-// 1. Collez ce code.
+// 1. Collez ce code et Renseignez à la ligne 13 le sheet id
 // 2. Sauvegardez (Icône disquette).
-// 3. Cliquez sur "Déployer" > "Gérer les déploiements".
-// 4. Cliquez sur l'icône "Crayon" (Modifier) en haut à droite.
-// 5. Dans "Version", sélectionnez "Nouvelle version".
-// 6. Cliquez sur "Déployer".
+// 3. Cliquez sur "Déployer" > "Application Web".
+// 4. Accès : "Tout le monde".
 
-const SHEET_ID = '1pgkIeWfiAEiUyw9INhIucoyzEqQmlvAgvfS1adzw1iQ';
+
+
+const SHEET_ID = 'xxxxxxxxxxx'; // copiez ici le sheet_id de votre page
 
 function doGet(e) {
   return handleRequest(e);
